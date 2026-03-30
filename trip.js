@@ -1,6 +1,6 @@
 import { showLoading, hideLoading, showModal, showConfirmModal, formatMoney  } from "./utils.js";
 
-const API = "https://script.google.com/macros/s/AKfycbzjT3fMlGroGODFfqWDLJYlKVto-qY4nuEFS1xtx6RPG_ykKl5yck3N7kvErIPQhx4eIQ/exec";
+const API = "https://script.google.com/macros/s/AKfycbwRQ8J7DAYMUJ3bfe4eLlDUmVe4AuKS-RJnkwnaVUEANsB2xpT1Npzy7mMA6LfV69WSgg/exec";
 
 let tripId = null;
 let expenses = []; 
@@ -387,6 +387,8 @@ async function deleteExpense(expenseId){
         expenses = expenses.filter(e => e.expenseId !== expenseId);
 
         await renderExpenses();
+        await renderSettle();
+        await renderSummary();
         await hideLoading();
 
       } catch (err){
