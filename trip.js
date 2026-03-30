@@ -1,6 +1,6 @@
 import { showLoading, hideLoading, showModal, showConfirmModal, formatMoney  } from "./utils.js";
 
-const API = "https://script.google.com/macros/s/AKfycbwRQ8J7DAYMUJ3bfe4eLlDUmVe4AuKS-RJnkwnaVUEANsB2xpT1Npzy7mMA6LfV69WSgg/exec";
+const API = "https://script.google.com/macros/s/AKfycbyfcukVmP5_mErQko3Re6kwVbr5qrtiLm751GosrKd27T1cLJI45WFSSmCLwBt2t2D28A/exec";
 
 let tripId = null;
 let expenses = []; 
@@ -109,6 +109,14 @@ async function loadAllData(){
   }
 
 }
+// async function reloadData(){
+//   const res = await fetch(API + `?action=getExpenses&tripId=${tripId}`);
+//   expenses = await res.json();
+
+//   await renderExpenses();
+//   await renderSettle();
+//   await renderSummary();
+// }
 function applyTripStatus(){
 
   if (flagShow === true){
@@ -386,9 +394,10 @@ async function deleteExpense(expenseId){
         // remove cache
         expenses = expenses.filter(e => e.expenseId !== expenseId);
 
-        await renderExpenses();
-        await renderSettle();
-        await renderSummary();
+        renderExpenses();
+        renderSettle();
+        renderSummary();
+        
         await hideLoading();
 
       } catch (err){
