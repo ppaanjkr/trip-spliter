@@ -187,6 +187,10 @@ input, select {
   /* font-weight: 600; */
   color: var(--text-sub);
 }
+.trip-splitname{
+  font-size: 14px;
+  color: var(--text-sub);
+}
 
 /* Empty */
 .empty {

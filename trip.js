@@ -166,6 +166,11 @@ function renderExpenses(){
   el.innerHTML = sorted.map(e => {
 
     const isTHB = e.currency === "THB";
+    const splitNames = (e.splits || [])
+      .filter(s => s.member.name != e.payer.name)
+      .map(s => s.member?.name || s.memberId)
+      .sort((a, b) => a.localeCompare(b))
+      .join(", ");
 
     return `
       <div class="card expense-card">
@@ -173,7 +178,7 @@ function renderExpenses(){
         <div class="expense-row">
           <div>
             <div class="expense-title">
-              ${e.type || ""} ${e.remark ? `• ${e.remark}` : ""}
+              ${e.type || ""} ${e.remark ? `: ${e.remark}` : ""}
             </div>
 
             <div class="trip-sub">
@@ -183,6 +188,7 @@ function renderExpenses(){
                 : `${formatMoney(e.amount)} ${e.currency} (${formatMoney(e.amountTHB)} THB)`
               }
             </div>
+            <span class="trip-splitname">w/ ${splitNames}</span>
           </div>
 
           <button class="delete-btn" data-id="${e.expenseId}">
