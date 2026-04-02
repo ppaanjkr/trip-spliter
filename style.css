@@ -182,14 +182,46 @@ input, select {
 .trip-title {
   /* font-weight: 600; */
 }
-
 .trip-sub {
   /* font-weight: 600; */
   color: var(--text-sub);
 }
+.trip-extra{
+  display: flex;
+  flex-direction: column;
+  color: var(--text-sub);
+}
+.trip-vat{
+  font-size: 12px;
+}
 .trip-splitname{
   font-size: 14px;
+}
+.expense-split {
+  font-size: 12px;
   color: var(--text-sub);
+  margin-top: 4px;
+}
+.expense-split-list {
+  width: 100%;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.split-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.split-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.split-amount {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Empty */

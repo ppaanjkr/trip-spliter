@@ -1,19 +1,25 @@
-import { showLoading, hideLoading, showModal, showConfirmModal, formatMoney  } from "./utils.js";
+import {
+  showLoading,
+  hideLoading,
+  showModal,
+  showConfirmModal,
+  formatMoney,
+} from "./utils.js";
 
-const API = "https://script.google.com/macros/s/AKfycbyfcukVmP5_mErQko3Re6kwVbr5qrtiLm751GosrKd27T1cLJI45WFSSmCLwBt2t2D28A/exec";
+const API =
+  "https://script.google.com/macros/s/AKfycbyfcukVmP5_mErQko3Re6kwVbr5qrtiLm751GosrKd27T1cLJI45WFSSmCLwBt2t2D28A/exec";
 
 let tripId = null;
-let expenses = []; 
-let members = []; 
+let expenses = [];
+let members = [];
 let flagShow = false;
 
-async function init(){
-
+async function init() {
   await showLoading();
   const params = new URLSearchParams(window.location.search);
   tripId = params.get("trip");
 
-  if (!tripId){
+  if (!tripId) {
     showModal("Trip not found");
     hideLoading();
     return;
@@ -22,74 +28,66 @@ async function init(){
   bindEvents();
   await loadAllData();
   await hideLoading();
-
 }
 init();
 
-function bindEvents(){
-
+function bindEvents() {
   // back
-  document.getElementById("backBtn")
-    .addEventListener("click", () => {
-      window.location.href = "index.html";
-    });
+  document.getElementById("backBtn").addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
 
   // add expense
-  document.getElementById("addBtn")
-    .addEventListener("click", () => {
-      window.location.href = `add-expense.html?trip=${tripId}`;
-    });
+  document.getElementById("addBtn").addEventListener("click", () => {
+    window.location.href = `add-expense.html?trip=${tripId}`;
+  });
 
   // close trip
-  document.getElementById("closeTripBtn")
-    .addEventListener("click", closeTrip);
+  document.getElementById("closeTripBtn").addEventListener("click", closeTrip);
 
   // tabs
-  document.querySelectorAll(".tab").forEach(tab => {
-
+  document.querySelectorAll(".tab").forEach((tab) => {
     tab.addEventListener("click", () => {
-
       // active tab
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document
+        .querySelectorAll(".tab")
+        .forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
 
       const type = tab.dataset.tab;
 
       switchTab(type);
-
     });
-
   });
-
 }
 
-async function loadAllData(){
-
+async function loadAllData() {
   // default tab
   switchTab("expenses");
 
   try {
-
     await showLoading();
 
     // info
     const tripRes = await fetch(API + `?action=getTrips`);
     const trips = await tripRes.json();
-    const trip = trips.find(t => t.tripId === tripId);
+    const trip = trips.find((t) => t.tripId === tripId);
 
-    if (trip){
+    if (trip) {
       document.getElementById("tripTitle").innerText = trip.tripName;
-      if(trip.status === "active"){
+      if (trip.status === "active") {
         flagShow = true;
       }
-      
     }
 
     // expenses
     const res = await fetch(API + `?action=getExpenses&tripId=${tripId}`);
     expenses = await res.json();
 
-    const totalTHB = expenses.reduce((sum, e) => sum + Number(e.amountTHB || 0), 0);
+    const totalTHB = expenses.reduce(
+      (sum, e) => sum + Number(e.amountTHB || 0),
+      0,
+    );
 
     document.getElementById("tripTotal").innerText =
       `${formatMoney(totalTHB)} THB`;
@@ -101,13 +99,11 @@ async function loadAllData(){
     renderSummary();
 
     await hideLoading();
-
-  } catch (err){
+  } catch (err) {
     await hideLoading();
     console.error(err);
     showModal("Failed to load data");
   }
-
 }
 // async function reloadData(){
 //   const res = await fetch(API + `?action=getExpenses&tripId=${tripId}`);
@@ -117,24 +113,17 @@ async function loadAllData(){
 //   await renderSettle();
 //   await renderSummary();
 // }
-function applyTripStatus(){
-
-  if (flagShow === true){
-
+function applyTripStatus() {
+  if (flagShow === true) {
     document.getElementById("addBtn").style.display = "block";
     document.getElementById("closeTripBtn").style.display = "block";
-
-  }else{
-
+  } else {
     document.getElementById("addBtn").style.display = "none";
     document.getElementById("closeTripBtn").style.display = "none";
-
   }
-
 }
 
-function switchTab(type){
-
+function switchTab(type) {
   // hide all
   document.getElementById("expensesTab").style.display = "none";
   document.getElementById("settleTab").style.display = "none";
@@ -145,15 +134,13 @@ function switchTab(type){
 
   // toggle button
   const addBtn = document.getElementById("addBtn");
-  addBtn.style.display = (type === "expenses" && flagShow) ? "block" : "none";
-
+  addBtn.style.display = type === "expenses" && flagShow ? "block" : "none";
 }
 
-function renderExpenses(){
-
+function renderExpenses() {
   const el = document.getElementById("expensesTab");
 
-  if (!expenses.length){
+  if (!expenses.length) {
     el.innerHTML = `<div class="empty">No expenses</div>`;
     return;
   }
@@ -163,32 +150,80 @@ function renderExpenses(){
     return new Date(b.createdAt) - new Date(a.createdAt);
   });
 
-  el.innerHTML = sorted.map(e => {
+  el.innerHTML = sorted
+    .map((e) => {
+      const isTHB = e.currency === "THB";
 
-    const isTHB = e.currency === "THB";
-    const splitNames = (e.splits || [])
-      .filter(s => s.member.name != e.payer.name)
-      .map(s => s.member?.name || s.memberId)
-      .sort((a, b) => a.localeCompare(b))
-      .join(", ");
+      const extra =
+        (Number(e.serviceCharge || 0) + Number(e.tax || 0)) * e.rate;
+      const peopleCount = (e.splits || []).length;
+      const extraPerPerson = extra / peopleCount;
+      const extraText =
+        extra > 0 && peopleCount > 0
+          ? `${formatMoney(extraPerPerson)}`
+          : "";
 
-    return `
+      const splitsRaw = e.splits || [];
+      const amounts = splitsRaw.map((s) => Number(s.amount || 0));
+      const isEqual =
+        amounts.length > 0 && amounts.every((a) => a === amounts[0]);
+      let splitHTML = "";
+
+      if (splitsRaw.length > 0) {
+        if (isEqual) {
+          const splits = splitsRaw.filter(
+            (s) => s.memberId !== e.payer.memberId,
+          );
+
+          const names = splits
+            .map((s) => s.member?.name || s.memberId)
+            .join(", ");
+
+          splitHTML = `
+      <div class="expense-split">
+        w/ ${names} (${formatMoney(amounts[0])} THB)
+      </div>
+    `;
+        } else {
+          splitHTML = `
+      <div class="expense-split-list">
+        ${splitsRaw
+          .map(
+            (s) => `
+          <div class="split-row">
+            <span class="split-name">${s.member?.name || s.memberId}</span>
+            <span class="split-amount">${formatMoney(s.amount)} THB</span>
+          </div>
+        `,
+          )
+          .join("")}
+      </div>
+    `;
+    // <span class="split-amount">${formatMoney(extra / peopleCount)} + extraPerPerson = ${formatMoney(s.amount)} THB</span>
+        }
+      }
+
+      return `
       <div class="card expense-card">
 
         <div class="expense-row">
-          <div>
+          <div style="width:100%">
             <div class="expense-title">
               ${e.type || ""} ${e.remark ? `: ${e.remark}` : ""}
             </div>
 
             <div class="trip-sub">
               ${e.payer.name} paid
-              ${isTHB
-                ? `${formatMoney(e.amount)} THB`
-                : `${formatMoney(e.amount)} ${e.currency} (${formatMoney(e.amountTHB)} THB)`
+              ${
+                isTHB
+                  ? `${formatMoney(e.amountTHB)} THB`
+                  : `${formatMoney(e.amount)} ${e.currency} (${formatMoney(e.amountTHB)} THB)`
               }
             </div>
-            <span class="trip-splitname">w/ ${splitNames}</span>
+            <div class="trip-extra">
+              <span class="trip-vat">${extraText != "" ? `service/vat: ${extraText} THB/person` : ""}</span>
+              ${isEqual ? `<span class="trip-splitname">${splitHTML}</span>` : `<span class="trip-splitname" style="width:50%">${splitHTML}</span>`}
+            </div>
           </div>
 
           <button class="delete-btn" data-id="${e.expenseId}">
@@ -199,30 +234,27 @@ function renderExpenses(){
 
       </div>
     `;
-
-  }).join("");
+    })
+    .join("");
 
   // bind delete
-  document.querySelectorAll(".delete-btn").forEach(btn => {
+  document.querySelectorAll(".delete-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       deleteExpense(btn.dataset.id);
     });
   });
-
 }
 
-function renderSettle(){
-
+function renderSettle() {
   const el = document.getElementById("settleTab");
 
   const txs = calculatePairwiseDebts();
 
   txs.sort((a, b) => {
-
     const fromA = getMemberName(a.from);
     const fromB = getMemberName(b.from);
 
-    if (fromA !== fromB){
+    if (fromA !== fromB) {
       return fromA.localeCompare(fromB);
     }
 
@@ -231,22 +263,18 @@ function renderSettle(){
     const toB = getMemberName(b.to);
 
     return toA.localeCompare(toB);
-
   });
 
-  if (!txs.length){
-
+  if (!txs.length) {
     el.innerHTML = `<div class="empty"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-dollar-sign-icon lucide-circle-dollar-sign"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg></div>`;
     return;
+  } else {
+    el.innerHTML = txs
+      .map((t) => {
+        const from = getMemberName(t.from);
+        const to = getMemberName(t.to);
 
-  }else{
-
-    el.innerHTML = txs.map(t => {
-
-      const from = getMemberName(t.from);
-      const to = getMemberName(t.to);
-
-      return `
+        return `
         <div class="card">
           <div class="expense-row">
               <strong>${from} &nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-arrow-right-icon lucide-circle-arrow-right"><circle cx="12" cy="12" r="10"/><path d="m12 16 4-4-4-4"/><path d="M8 12h8"/></svg> &nbsp;&nbsp;${to}</strong>
@@ -256,16 +284,13 @@ function renderSettle(){
           </div>
         </div>
       `;
-
-    }).join("");
-
+      })
+      .join("");
   }
-
 }
 
-function renderSummary(){
-
-  if (!expenses.length){
+function renderSummary() {
+  if (!expenses.length) {
     document.getElementById("summaryTab").innerHTML =
       `<div class="empty">No data</div>`;
     return;
@@ -274,7 +299,7 @@ function renderSummary(){
   //  total
   const totalTHB = expenses.reduce(
     (sum, e) => sum + Number(e.amountTHB || 0),
-    0
+    0,
   );
 
   document.getElementById("summaryTotal").innerText =
@@ -286,29 +311,27 @@ function renderSummary(){
   // group
   const categoryMap = {};
 
-  expenses.forEach(e => {
-
+  expenses.forEach((e) => {
     const key = e.type || "other";
 
-    if (!categoryMap[key]){
+    if (!categoryMap[key]) {
       categoryMap[key] = {
         totalTHB: 0,
-        count: 0
+        count: 0,
       };
     }
 
     categoryMap[key].totalTHB += Number(e.amountTHB || 0);
     categoryMap[key].count += 1;
-
   });
 
   const el = document.getElementById("summaryCategory");
 
-  el.innerHTML = Object.entries(categoryMap).map(([type, val]) => {
+  el.innerHTML = Object.entries(categoryMap)
+    .map(([type, val]) => {
+      const percent = (val.totalTHB / totalTHB) * 100;
 
-    const percent = (val.totalTHB / totalTHB) * 100;
-
-    return `
+      return `
       <div class="card category-card">
 
         <div class="category-row">
@@ -326,120 +349,97 @@ function renderSummary(){
 
       </div>
     `;
-
-  }).join("");
-
+    })
+    .join("");
 }
 
-function closeTrip(){
+function closeTrip() {
+  showConfirmModal("End trip?", async () => {
+    try {
+      await showLoading();
 
-  showConfirmModal(
-    "End trip?",
-    async () => {
+      const res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "closeTrip",
+          data: { tripId },
+        }),
+      });
 
-      try {
+      const data = await res.json();
 
-        await showLoading();
+      await hideLoading();
 
-        const res = await fetch(API, {
-          method: "POST",
-          body: JSON.stringify({
-            action: "closeTrip",
-            data: { tripId }
-          })
+      if (!data.success) {
+        showModal(data.message || "Error");
+        return;
+      } else {
+        showConfirmModal("Trip closed!", () => {
+          window.location.href = "index.html";
         });
+      }
+    } catch (err) {
+      hideLoading();
+      showModal("Something went wrong");
+    }
+  });
+}
 
-        const data = await res.json();
+async function deleteExpense(expenseId) {
+  showConfirmModal("Delete?", async () => {
+    try {
+      await showLoading();
 
-        await hideLoading();
+      const res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "deleteExpense",
+          data: { expenseId },
+        }),
+      });
 
-        if (!data.success){
-          showModal(data.message || "Error");
-          return;
-        }else{
-          showConfirmModal("Trip closed!", () => {
-            window.location.href = "index.html";
-          });
-        }
+      const data = await res.json();
 
-      } catch (err){
-        hideLoading();
-        showModal("Something went wrong");
+      if (!data.success) {
+        showModal(data.message || "Error");
+        return;
       }
 
-    }
-  );
+      // remove cache
+      expenses = expenses.filter((e) => e.expenseId !== expenseId);
 
+      renderExpenses();
+      renderSettle();
+      renderSummary();
+
+      await hideLoading();
+    } catch (err) {
+      hideLoading();
+      showModal("Something went wrong");
+    }
+  });
 }
 
-async function deleteExpense(expenseId){
-
-  showConfirmModal(
-    "Delete?",
-    async () => {
-
-      try {
-
-        await showLoading();
-
-        const res = await fetch(API, {
-          method: "POST",
-          body: JSON.stringify({
-            action: "deleteExpense",
-            data: { expenseId }
-          })
-        });
-
-        const data = await res.json();
-
-        if (!data.success){
-          showModal(data.message || "Error");
-          return;
-        }
-
-        // remove cache
-        expenses = expenses.filter(e => e.expenseId !== expenseId);
-
-        renderExpenses();
-        renderSettle();
-        renderSummary();
-        
-        await hideLoading();
-
-      } catch (err){
-
-        hideLoading();
-        showModal("Something went wrong");
-
-      }
-
-    }
-  );
-
-}
-
-async function loadMembers(tripId){
+async function loadMembers(tripId) {
   const res = await fetch(API + `?action=getTripMembers&tripId=${tripId}`);
   members = await res.json();
-  document.getElementById("tripMembers").innerHTML =
-    members.map(m => m.avatar).join(" ");
+  document.getElementById("tripMembers").innerHTML = members
+    .map((m) => m.avatar)
+    .join(" ");
 }
 
 // ===================== settle ====================== //
 // คำนวณหนี้ ไม่เข้าใจสูตร แต่เหมือนจะถูก
-function calculatePairwiseDebts(){
-
+function calculatePairwiseDebts() {
   const debts = {};
 
   // -----------------------
   // 1. เก็บหนี้รายคู่
   // -----------------------
-  expenses.forEach(e => {
-
+  expenses.forEach((e) => {
     const payer = e.payer.memberId;
 
-    (e.splits || []).forEach(s => {
-
+    (e.splits || []).forEach((s) => {
       if (s.memberId === payer) return;
 
       const key = `${s.memberId}|${payer}`;
@@ -447,9 +447,7 @@ function calculatePairwiseDebts(){
       if (!debts[key]) debts[key] = 0;
 
       debts[key] += Number(s.amount || 0); // THB
-
     });
-
   });
 
   // -----------------------
@@ -457,8 +455,7 @@ function calculatePairwiseDebts(){
   // -----------------------
   const result = [];
 
-  for (let key in debts){
-
+  for (let key in debts) {
     const [from, to] = key.split("|");
     const reverseKey = `${to}|${from}`;
 
@@ -467,21 +464,19 @@ function calculatePairwiseDebts(){
 
     const net = Math.round((forward - backward) * 100) / 100;
 
-    if (net > 0){
+    if (net > 0) {
       result.push({
         from,
         to,
-        amount: net
+        amount: net,
       });
     }
-
   }
 
   return result;
-
 }
 
-function getMemberName(id){
-  const m = members.find(x => x.memberId === id);
+function getMemberName(id) {
+  const m = members.find((x) => x.memberId === id);
   return m ? m.name : id;
 }
