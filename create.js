@@ -1,7 +1,7 @@
 import { currencies } from "./data.js";
 import { showLoading, hideLoading, showModal } from "./utils.js";
 
-const API = "https://script.google.com/macros/s/AKfycbyfcukVmP5_mErQko3Re6kwVbr5qrtiLm751GosrKd27T1cLJI45WFSSmCLwBt2t2D28A/exec";
+const API = "https://script.google.com/macros/s/AKfycbwE8XBIUUhZMlFRti72p1HbrHrqaRpiotQNcA7PdoSnvlCc4-oXBUlRkhWg-naqx3kTjw/exec";
 
 let selectedMembers = [];
 
@@ -93,7 +93,7 @@ document.getElementById("createTrip")
           data: {
             tripName,
             currency,
-            memberIds: selectedMembers
+            members: selectedMembers
           }
         })
       });

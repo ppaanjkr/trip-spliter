@@ -1,4 +1,4 @@
-const API = "https://script.google.com/macros/s/AKfycbyfcukVmP5_mErQko3Re6kwVbr5qrtiLm751GosrKd27T1cLJI45WFSSmCLwBt2t2D28A/exec";
+const API = "https://script.google.com/macros/s/AKfycbwE8XBIUUhZMlFRti72p1HbrHrqaRpiotQNcA7PdoSnvlCc4-oXBUlRkhWg-naqx3kTjw/exec";
 
 async function init(){
   await showLoading();
@@ -21,6 +21,7 @@ async function loadTrips(){
   try{
     const res = await fetch(API + "?action=getTrips");
     const trips = await res.json();
+    trips.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const el = document.getElementById("tripList");
 
@@ -40,10 +41,13 @@ async function loadTrips(){
           <div class="trip-row">
               <div>
               <div class="trip-title">${t.tripName}</div>
-                <div class="trip-sub">${t.members.join(", ")}</div>
+                <div class="trip-sub" style="font-size: 14px">${t.members.join(", ")}</div>
               </div>
 
-              <div><strong>${t.totalTHB} THB</strong></div>
+              <div style="text-align: center;">
+                <div class="trip-total">${formatMoney(t.totalTHB)}</div>
+                <div class="trip-count" style="font-size: 12px">THB</div>
+              </div>
           </div>
 
           </div>
@@ -87,3 +91,9 @@ function showModal(text, onConfirm){
   };
 }
 
+function formatMoney(num){
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(num || 0));
+}
