@@ -7,7 +7,7 @@ import {
 } from "./utils.js";
 
 const API =
-  "https://script.google.com/macros/s/AKfycbwE8XBIUUhZMlFRti72p1HbrHrqaRpiotQNcA7PdoSnvlCc4-oXBUlRkhWg-naqx3kTjw/exec";
+  "https://script.google.com/macros/s/AKfycbzxncOHWBRsE3J3Yh1COWDSlcZP9ruKZ1qG0SK6DRPkL6SOaTsAXSWQ1RDR7uDIFSMNeg/exec";
 
 let tripId = null;
 let expenses = [];
@@ -34,7 +34,7 @@ init();
 function bindEvents() {
   // back
   document.getElementById("backBtn").addEventListener("click", () => {
-    window.location.href = "index.html";
+    window.location.href = "index.html?history=1";
   });
 
   // add expense

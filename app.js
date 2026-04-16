@@ -1,7 +1,20 @@
-const API = "https://script.google.com/macros/s/AKfycbwE8XBIUUhZMlFRti72p1HbrHrqaRpiotQNcA7PdoSnvlCc4-oXBUlRkhWg-naqx3kTjw/exec";
+const API = "https://script.google.com/macros/s/AKfycbzxncOHWBRsE3J3Yh1COWDSlcZP9ruKZ1qG0SK6DRPkL6SOaTsAXSWQ1RDR7uDIFSMNeg/exec";
 
 async function init(){
+
   await showLoading();
+
+  const params = new URLSearchParams(window.location.search);
+  const isHistoryMode = params.get("history") === "1";
+
+  // เป็น history mode ไม่ redirect
+  if (isHistoryMode){
+    await loadTrips();
+    await hideLoading();
+    return;
+  }
+
+
   const res = await fetch(API + "?action=getActiveTrip");
   const trip = await res.json();
 
