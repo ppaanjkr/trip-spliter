@@ -1,10 +1,11 @@
 import { expenseTypes } from "./data.js";
 import { showLoading, hideLoading, showModal } from "./utils.js";
 
-const API = "https://script.google.com/macros/s/AKfycbzxncOHWBRsE3J3Yh1COWDSlcZP9ruKZ1qG0SK6DRPkL6SOaTsAXSWQ1RDR7uDIFSMNeg/exec";
+const API = "https://script.google.com/macros/s/AKfycbx-hxeamdhvzPswq-NRQaQJDnpttWFEZtKsIL3-q-mhv9PznvgFQEJ5ty6kSDQ4U7P_DQ/exec";
 
 let tripId = null;
 let tripCurrency = "THB";
+let exchangeRate = 1;
 
 let members = [];
 let selectedMembers = [];
@@ -34,15 +35,45 @@ init();
 function loadCurrencies(){
 
   const el = document.getElementById("currency");
+  const rateInput = document.getElementById("exChangeRate");
 
   const list = tripCurrency === "THB"
     ? ["THB"]
     : [tripCurrency, "THB"];
+    
+  if(tripCurrency === "THB"){
+    rateInput.style.display = "none"
+  }else{
+    rateInput.style.display = "block"
+  }
 
   el.innerHTML = list.map(c => `
     <option value="${c}">${c}</option>
   `).join("");
 
+  // default 
+  el.value = tripCurrency;
+
+  // onchange
+  handleCurrencyChange();
+  el.addEventListener("change", handleCurrencyChange);
+}
+function handleCurrencyChange(){
+
+  const currency = document.getElementById("currency").value;
+  const rateInput = document.getElementById("exChangeRate");
+
+  if (currency === "THB"){
+
+    rateInput.style.display = "none";
+    rateInput.value = 1;
+
+  } else {
+
+    rateInput.style.display = "block";
+    rateInput.value = exchangeRate || 1;
+
+  }
 }
 
 function renderTypes(){
@@ -73,6 +104,7 @@ async function loadAllData(){
   members = await res.json();
 
   tripCurrency = members[0]?.tripCurrency || "THB";
+  if(members[0]?.tripCurrency != "THB") exchangeRate = members[0]?.exchangeRate;
 
   renderMembers();
   renderPayer();
@@ -233,13 +265,7 @@ async function saveExpense(){
 
     const currency = document.getElementById("currency").value;
 
-    let rate = 1;
-
-    if (currency !== "THB") {
-      const res = await fetch(`https://open.er-api.com/v6/latest/${currency}`);
-      const data = await res.json();
-      rate = data.rates.THB;
-    }
+    let rate = document.getElementById("exChangeRate").value;
 
     // validate
     if (!payer) throw new Error("Select who paid");
