@@ -1,7 +1,7 @@
 import { expenseTypes } from "./data.js";
 import { showLoading, hideLoading, showModal } from "./utils.js";
 
-const API = "https://script.google.com/macros/s/AKfycbx-hxeamdhvzPswq-NRQaQJDnpttWFEZtKsIL3-q-mhv9PznvgFQEJ5ty6kSDQ4U7P_DQ/exec";
+const API = "https://script.google.com/macros/s/AKfycbx3eBT4G_BkGSxntKILoZZ6x1iIvktaiZg2oWqrueRn_WbndxNUi2wEnrF-H__6bWEPgw/exec";
 
 let tripId = null;
 let tripCurrency = "THB";
