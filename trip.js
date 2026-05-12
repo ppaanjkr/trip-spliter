@@ -7,7 +7,7 @@ import {
 } from "./utils.js";
 
 const API =
-  "https://script.google.com/macros/s/AKfycbx3eBT4G_BkGSxntKILoZZ6x1iIvktaiZg2oWqrueRn_WbndxNUi2wEnrF-H__6bWEPgw/exec";
+  "https://script.google.com/macros/s/AKfycbx_gMaD5a0FRHYiSnkQGyboqODtkGN2kZFVF-8VDE85vWLlgzUnVrtBkNr-jQukTcLdsA/exec";
 
 let tripId = null;
 let expenses = [];
@@ -159,9 +159,7 @@ function renderExpenses() {
       const peopleCount = (e.splits || []).length;
       const extraPerPerson = extra / peopleCount;
       const extraText =
-        extra > 0 && peopleCount > 0
-          ? `${formatMoney(extraPerPerson)}`
-          : "";
+        extra > 0 && peopleCount > 0 ? `${formatMoney(extraPerPerson)}` : "";
 
       const splitsRaw = e.splits || [];
       const amounts = splitsRaw.map((s) => Number(s.amount || 0));
@@ -171,17 +169,17 @@ function renderExpenses() {
 
       if (splitsRaw.length > 0) {
         if (isEqual) {
-          const splits = splitsRaw.filter(
-            (s) => s.memberId !== e.payer.memberId,
-          );
+          // const splits = splitsRaw.filter(
+          //   (s) => s.memberId !== e.payer.memberId,
+          // );
 
-          const names = splits
+          const names = splitsRaw
             .map((s) => s.member?.name || s.memberId)
             .join(", ");
 
           splitHTML = `
-      <div class="expense-split">
-        w/ ${names} (${formatMoney(amounts[0])} THB)
+      <div class="expense-split" style="font-size: 0.5em">
+        FOR: <span style="font-size: 1.5em">${names} (${formatMoney(amounts[0])} THB)</span>
       </div>
     `;
         } else {
@@ -199,7 +197,7 @@ function renderExpenses() {
           .join("")}
       </div>
     `;
-    // <span class="split-amount">${formatMoney(extra / peopleCount)} + extraPerPerson = ${formatMoney(s.amount)} THB</span>
+          // <span class="split-amount">${formatMoney(extra / peopleCount)} + extraPerPerson = ${formatMoney(s.amount)} THB</span>
         }
       }
 
@@ -269,14 +267,16 @@ function renderSettle() {
     el.innerHTML = `<div class="empty"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-dollar-sign-icon lucide-circle-dollar-sign"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg></div>`;
     return;
   } else {
-    el.innerHTML = txs
+    el.innerHTML = `<div class="settle-tooltip">Tap card to copy PromptPay</div>`;
+    el.innerHTML += txs
       .map((t) => {
         const from = getMemberName(t.from);
         const to = getMemberName(t.to);
+        const pp = getMemberPropmtpay(t.to);
 
         return `
         <div class="card">
-          <div class="expense-row">
+          <div class="expense-row" onclick="copyPromptPay('${pp}')">
               <strong>${from} &nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-arrow-right-icon lucide-circle-arrow-right"><circle cx="12" cy="12" r="10"/><path d="m12 16 4-4-4-4"/><path d="M8 12h8"/></svg> &nbsp;&nbsp;${to}</strong>
               <div class="trip-sub">
                 ${formatMoney(t.amount)} THB
@@ -288,7 +288,26 @@ function renderSettle() {
       .join("");
   }
 }
+function showCopyToast(text = "Copied PromptPay") {
+  const toast = document.getElementById("copyToast");
 
+  toast.innerText = text;
+
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1800);
+}
+window.copyPromptPay = async function (text) {
+  try {
+    await navigator.clipboard.writeText(text);
+
+    showCopyToast();
+  } catch (err) {
+    showCopyToast("Copy failed");
+  }
+};
 function renderSummary() {
   if (!expenses.length) {
     document.getElementById("summaryTab").innerHTML =
@@ -426,6 +445,7 @@ async function loadMembers(tripId) {
   document.getElementById("tripMembers").innerHTML = members
     .map((m) => m.avatar)
     .join(" ");
+  console.log(members);
 }
 
 // ===================== settle ====================== //
@@ -479,4 +499,9 @@ function calculatePairwiseDebts() {
 function getMemberName(id) {
   const m = members.find((x) => x.memberId === id);
   return m ? m.name : id;
+}
+
+function getMemberPropmtpay(id) {
+  const m = members.find((x) => x.memberId === id);
+  return m ? m.propmptpay : id;
 }

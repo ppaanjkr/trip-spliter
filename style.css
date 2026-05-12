@@ -223,6 +223,32 @@ input, select {
 .split-amount {
   font-variant-numeric: tabular-nums;
 }
+.settle-tooltip{
+  font-size: 12px; 
+  text-align: center;
+  margin-bottom: 5px;
+  color: var(--text-sub);
+  font-style: italic;
+}
+.copy-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2D3135;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: .25s;
+  z-index: 9999;
+}
+.copy-toast.show {
+  opacity: 1;
+  bottom: 36px;
+}
 
 /* Empty */
 .empty {

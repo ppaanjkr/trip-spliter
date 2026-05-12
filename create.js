@@ -1,7 +1,7 @@
 import { currencies } from "./data.js";
 import { showLoading, hideLoading, showModal } from "./utils.js";
 
-const API = "https://script.google.com/macros/s/AKfycbx3eBT4G_BkGSxntKILoZZ6x1iIvktaiZg2oWqrueRn_WbndxNUi2wEnrF-H__6bWEPgw/exec";
+const API = "https://script.google.com/macros/s/AKfycbwjb-C_CH0L7AxEQiqpvVbVUHlCabxKTuJDqOEca_leQGB1SiVYSuY05Yg6KQZrxsJ7zQ/exec";
 
 let selectedMembers = [];
 
